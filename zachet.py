@@ -75,8 +75,7 @@ artab_height = 100  # Высота ячейки погрешности
 ar_x0 = 370
 ar_y0 = 100
 
-ar_txt = [[' Инструмент', " Цена\n деления, мм", " Инструментальная\n погрешность, мм"],
-          [" Линейка", 1, 1,5]]
+
 
 txt = [["№", " Цена\n деления", " Число\n горошин", " Длина\n ряда", " Диаметр\n горошин"],
        ['1', [ar_txt[1][2]], None, None, None],
@@ -119,7 +118,7 @@ def title():
 def main_menu():
     h1 = Canvas(h, bg=mcol)
     Label(h1, text="Меню", font="Arial 38", background=mcol, foreground=txtcol).pack(pady=10)
-    for (name, func) in [("Описание", description.draw), ("Погрешности", None), ("Таблица #1", None), ("Таблица #2", None), ("Числовые прямые", None), ("Помощь", helper)]:
+    for (name, func) in [("Описание", description.draw), ("Погрешности", arrogance.draw), ("Таблица #1", None), ("Таблица #2", None), ("Числовые прямые", None), ("Помощь", helper)]:
         Button(h1, text = name, command=func, height=6, width=20, background=mcol, foreground=txtcol).pack(pady=10)
     Label(h1, anchor="c", text="Для перехода в раздел нажмите на\nпрямоугольник левой кнопкой мыши",
                   font="ARIAL 24", background=mcol, foreground=frcol).pack(pady=10, side=BOTTOM)
@@ -158,6 +157,36 @@ class Description:
         display(h1)
 description = Description()
 
+
+class Errors:
+    def __init__(self):
+        self.table = [["Цена\n деления, мм", "Инструментальная\n погрешность, мм"], [1, 1.5]]
+        self.check_float = (scr.register(self.is_float), "%P")
+
+    def is_float(self, value):
+        try:
+            return float(value) < 1.9 and len(value) < 5
+        except:
+            return False
+
+    def draw(self):
+        h1 = Canvas(h, bg=mcol)
+        global pos
+        pos = State.Errors
+        Label(h1, text="Погрешности", font="Arial 36", foreground=txtcol, background=mcol).pack(pady=10)
+        Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(pady=10, side=BOTTOM)
+        h2 = Canvas(h1, bg=mcol)
+        for y, cell in enumerate(self.table[0]):
+            Label(h2, text=cell, foreground=txtcol, background=mcol, font="Arial 24").grid(row=0, column=y, pady=10)
+        for y, row in enumerate(self.table[1:]):
+            for x, cell in enumerate(row):
+                e = Entry(h2, foreground=txtcol, background=mcol, font="Arial 24", validate="key", validatecommand=self.check_float)
+                e.insert(0, str(cell))
+                e.grid(row=y + 1 , column=x)
+        h2.pack()
+        display(h1)
+arrogance = Errors()
+
 def helper():
     h1 = Canvas(h, bg=mcol)
     global pos
@@ -184,12 +213,13 @@ def position(pos):
         main_menu()
     elif pos == State.Description:
         description.draw()
-#    elif pos == State.Table0:
-#        table()
     elif pos == State.Help:
         helper()
-    '''elif pos == State.Errors:
-            arrogance()
+    elif pos == State.Errors:
+        arrogance.draw()
+    '''
+    elif pos == State.Table0:
+        table()
     elif pos == State.Table1:
     print('table2')
         table2()

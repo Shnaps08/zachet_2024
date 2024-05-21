@@ -29,12 +29,14 @@ h = Canvas(scr, width=1920, height=1080, bg=mcol)
 h.pack(fill=BOTH, expand=True)
 widget = None
 
-def clear():
+def display(new):
+    h.delete('all')
     global widget
     if widget:
         widget.pack_forget()
-    widget = None
-    h.delete('all')
+    widget = new
+    if new is not None:
+        new.pack(fill=BOTH, expand=True)
 
 '''#настройка таблицы значений
 n = 5
@@ -105,76 +107,75 @@ def table():
 
 # Подфункции
 def title():
-    h.delete("all")
-    h.create_text(960, 100, anchor="c", text="Зачетная работа", font="ARIAL 42",
-                  fill=frcol)
-    h.create_text(960, 160, anchor="c", text="Определение погрешности косвенных измерений", font="ARIAL 46",
-                  fill=frcol)
-    h.create_text(960, 220, anchor="c", text="Выполнила ученица 9 класса Г", font="ARIAL 28", fill=txtcol)
-    h.create_text(960, 260, anchor="c", text="Шрамова Надежда", font="ARIAL 28", fill=txtcol)
-    h.create_text(960, 960, anchor="c", text="2023 - 2024 учебный год", font="ARIAL 24", fill=txtcol)
-    h.create_text(960, 1020, anchor="c", text="Для перехода в меню нажмите клавишу пробела", font="ARIAL 24", fill=frcol)
+    h1 = Canvas(h, width=1900, height=1000, bg=mcol)
+    Label(h1, anchor="c", text="Зачетная работа", font="ARIAL 42", foreground=frcol, background=mcol).pack()
+    Label(h1, anchor="c", text="Определение погрешности косвенных измерений", font="ARIAL 46", foreground=frcol, background=mcol).pack(pady=20)
+    Label(h1, anchor="c", text="Выполнила ученица 9 класса Г", font="ARIAL 28", foreground=txtcol, background=mcol).pack(pady=10)
+    Label(h1, anchor="c", text="Шрамова Надежда", font="ARIAL 28", foreground=txtcol, background=mcol).pack()
+    Label(h1, anchor="c", text="Для перехода в меню нажмите клавишу пробела", font="ARIAL 24", foreground=frcol, background=mcol).pack(pady=10, side=BOTTOM)
+    Label(h1, anchor="c", text="2023 - 2024 учебный год", font="ARIAL 24", foreground=txtcol, background=mcol).pack(side=BOTTOM)
+    display(h1)
 
 def main_menu():
-    global widget
-    clear()
-
-    h1 = Canvas(h, width=1900, height=1000, bg=mcol)
-    h1.pack(fill=BOTH, expand=True)
-
-    '''
-    h.create_text(1920 / 2, ofsett / 2, text="Меню", fill=txtcol, font="Arial 38")
-    h.create_text(960, 1020, anchor="c", text="Для перехода в раздел нажмите на\nпрямоугольник левой кнопкой мыши",
-                  font="ARIAL 24", fill=frcol)
-    '''
+    h1 = Canvas(h, bg=mcol)
     Label(h1, text="Меню", font="Arial 38", background=mcol, foreground=txtcol).pack(pady=10)
-
-    for (name, func) in [("Описание", description), ("Погрешности", None), ("Таблица #1", None), ("Таблица #2", None), ("Числовые прямые", None), ("Помощь", helper)]:
+    for (name, func) in [("Описание", description.draw), ("Погрешности", None), ("Таблица #1", None), ("Таблица #2", None), ("Числовые прямые", None), ("Помощь", helper)]:
         Button(h1, text = name, command=func, height=6, width=20, background=mcol, foreground=txtcol).pack(pady=10)
-
     Label(h1, anchor="c", text="Для перехода в раздел нажмите на\nпрямоугольник левой кнопкой мыши",
-                  font="ARIAL 24", background=mcol, foreground=frcol).pack(pady=10)
+                  font="ARIAL 24", background=mcol, foreground=frcol).pack(pady=10, side=BOTTOM)
+    display(h1)
 
-    widget = h1
+class Description:
+    def __init__(self):
+        self.images = []
+        self.idx = 0
+        img_ns = ["im1.png", "im2.png", "moon.png"]
+        for name in img_ns:
+            self.images.append(PhotoImage(file=name))
 
-def description():
-    global pos
-    pos = State.Description
-    h.delete("all")
-    h.create_text(1920 / 2, ofsett / 2, text="Описание", font="Arial 36", fill=txtcol)
-    h.create_text(960, 960, text="Для выхода в меню нажмите Escape", font="Arial 24", fill=frcol)
-    im_1 = PhotoImage(file="зачет(1).png")
-    pic1 = h.create_image(960, 540, image=im_1, anchor="c")
-    im_2 = PhotoImage(file="зачет(1).png")
-    pic2 = h.create_image(960, 540, image=im_2, anchor="c")
-    im_3 = PhotoImage(file="зачет(1).png")
-    pic3 = h.create_image(960, 540, image=im_3, anchor="c")
-    h.create_text(960, 75, text="Страница 1", font="Arial 24", fill=txtcol)
-    h.create_text(960, 1000, text="Для переключения на страницу вперед нажмите клавишу PgDn", font="Arial 22", fill=frcol)
+    def shift(self, n):
+        if pos != State.Description:
+            return
+        self.idx += n
+        if self.idx < 0:
+            self.idx = 0
+        elif self.idx >= len(self.images):
+            self.idx = len(self.images) - 1
+        self.draw()
+    def draw(self):
+        print("draw")
+        h1 = Canvas(h, bg=mcol)
+        global pos
+        pos = State.Description
+        Label(h1, text="Описание", font="Arial 36", foreground=txtcol, background=mcol).pack()
+        Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(
+            side=BOTTOM)
+        h1.create_image(960, 540, image=self.images[self.idx], anchor="c")
+        Label(h1, text="Для переключения на страницу назад нажмите клавишу PgUp", font="Arial 22", foreground=frcol,
+              background=mcol).pack(pady=5, side=BOTTOM)
+        Label(h1, text="Для переключения на страницу вперед нажмите клавишу PgDn", font="Arial 22", foreground=frcol,
+              background=mcol).pack(pady=10, side=BOTTOM)
+        display(h1)
+description = Description()
 
 def helper():
+    h1 = Canvas(h, bg=mcol)
     global pos
     print("Draw help")
     pos = State.Help
-    clear()
-    h.create_text(1920 / 2, ofsett / 2, text="Помощь", font="Arial 36", fill=txtcol)
-    h.create_text(450, 300, anchor="w",
-                  text="- Для того, чтобы попасть в нужный вам раздел,\n кликните на прямоугольник этого раздела в меню\n левой кнопкой мыши",
-                  font="Arial 24", fill=txtcol)
-    h.create_text(450, 400, anchor="w",
-                  text="- Для того, чтобы листать страницы в описании веперд, нажмите клавишу Page Down,\n а назад -- клавишу Page Up",
-                  font="Arial 24", fill=txtcol)
-    h.create_text(450, 480, anchor="w",
-                  text="- Для того, чтобы попасть в меню из любого отдела,\n нажмите клавишу Escape",
-                  font="Arial 24", fill=txtcol)
-    h.create_text(450, 560, anchor="w",
-                  text="- Для того, чтобы попасть во вторую таблицу, нажмите клавишу F,\n а в первую -- клавишу В",
-                  font="Arial 24", fill=txtcol)
-    h.create_text(450, 640, anchor="w",
-                  text="- Для того, чтобы автоматически заполнить таблицы,\n нажмите клавишу F3",
-                  font="Arial 24", fill=txtcol)
-
-    h.create_text(960, 960, text="Для выхода в меню нажмите Escape", font="Arial 24", fill=frcol)
+    Label(h1, text="Помощь", font="Arial 36", foreground=txtcol, background=mcol).pack()
+    Label(h1, anchor="w", text="- Для того, чтобы попасть в нужный вам раздел,\n кликните на прямоугольник этого раздела в меню\n левой кнопкой мыши",
+                  font="Arial 24", foreground=txtcol, background=mcol).pack(pady=10)
+    Label(h1, anchor="w", text="- Для того, чтобы листать страницы в описании вперед, нажмите клавишу Page Down,\n а назад -- клавишу Page Up",
+                  font="Arial 24", foreground=txtcol, background=mcol).pack(pady=10)
+    Label(h1, anchor="w", text="- Для того, чтобы попасть в меню из любого отдела,\n нажмите клавишу Escape", font="Arial 24",
+          foreground=txtcol, background=mcol).pack(pady=10)
+    Label(h1, anchor="w", text="- Для того, чтобы попасть во вторую таблицу, нажмите клавишу F,\n а в первую -- клавишу В", font="Arial 24",
+          foreground=txtcol, background=mcol).pack(pady=10)
+    Label(h1, anchor="w", text="- Для того, чтобы автоматически заполнить таблицы,\n нажмите клавишу F3", font="Arial 24",
+          foreground=txtcol, background=mcol).pack()
+    Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(side=BOTTOM)
+    display(h1)
 
 def position(pos):
     if pos == State.Title:
@@ -182,7 +183,7 @@ def position(pos):
     elif pos == State.Menu:
         main_menu()
     elif pos == State.Description:
-        description()
+        description.draw()
 #    elif pos == State.Table0:
 #        table()
     elif pos == State.Help:
@@ -202,24 +203,31 @@ def main(e):
     print(f'Event: {e.keysym}')
     if e.type == EventType.ButtonPress:
         print(f'Button: {e.num}')
-    global pos, height, space, ofsett, point, x, y, costyl1
+    global pos
     if pos == State.Menu:
         return menu_event(e)
     if e.keysym == "space":
         if pos == State.Title:
             pos = State.Menu
         position(pos)
-    if e.keysym == "Escape":
-        if pos != State.Menu and pos != State.Title:
-            pos = State.Menu
-        print(pos)
-        position(pos)
     '''if pos == 3 or pos == 4 or pos == 5:
         move_input(e)'''
     if pos != 3 and pos != 4 and pos != 5:
         costyl1 = 0
 
+def on_escape(e):
+    global pos
+    print(f"Escape: {pos}")
+    if pos != State.Menu and pos != State.Title:
+        pos = State.Menu
+        main_menu()
+
+scr.bind("<Prior>", lambda e: description.shift(-1))
+scr.bind("<Next>", lambda e: description.shift(1))
+
 scr.bind("<KeyRelease>", main)
+scr.bind("<Escape>", on_escape)
+
 scr.bind("<Button-1>", main)
 title()
 scr.mainloop()

@@ -22,9 +22,46 @@ class State(Enum):
     Help = 7
 
 pos = State.Title
+class Row0:
+    def __init__(self, widget):
+        self.check_num = (scr.register(self.is_num), "%P", "%V")
+        self.error = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
+        self.size = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
+        self.length = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
+        self.result = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
+        self.maxval = 300
+
+    def is_num(self, value, op):
+        try:
+            if value != value.strip():
+                return False
+            v = float(value)
+            if v >= self.maxval or len(value) >= 5:
+                return False
+            if op == 'focusout':
+                self.calc()
+            return True
+        except:
+            return False
+
+    def w_list(self):
+        return [self.error, self.size, self.length, self.result]
+
+    def calc(self):
+        try:
+            print(f"{self.length.get()}")
+            d = float(self.length.get()) / float(self.size.get())
+            ar = float(self.error.cget('text')) * float(self.size.get())
+            self.result.config(text=f"{d:.2f} +- {ar}")
+        except:
+            self.result.config(text='')
+
+    def set_error(self, error):
+        self.error.config(text=f"{error}")
+        self.calc()
 
 scr = Tk()
-scr.geometry("1920x1080")
+scr.geometry("192x1080")
 h = Canvas(scr, width=1920, height=1080, bg=mcol)
 h.pack(fill=BOTH, expand=True)
 widget = None
@@ -38,51 +75,12 @@ def display(new):
     if new is not None:
         new.pack(fill=BOTH, expand=True)
 
-'''#настройка таблицы значений
-n = 5
-m = 6
-m_ofsett = 1  # Отступ информации от границ таблицы в яч. по У
-n_ofsett = 1  # Отступ информации от границ таблицы в яч. по Х
-tab_height = 100  # Высота ячейки
-tab_width = 240  # Ширина ячейки
-
-x0 = 200  # Отступ по Х
-y0 = 100  # Отступ по У
-x, y = 2, 1  # Начальная позиция курсора в таблице
+'''
 
 #настройка таблицы значений 2
 n2 = 6
 m2 = 6
-m2_ofsett = 1  # Отступ информации от границ таблицы в яч. по У
-n2_ofsett = 1  # Отступ информации от границ таблицы в яч. по Х
-tab2_height = 100  # Высота ячейки
-tab2_width = 240  # Ширина ячейки
 
-x02 = 200  # Отступ по Х
-y02 = 100  # Отступ по У
-x2, y2 = 2, 1  # Начальная позиция курсора в таблице
-
-# Настройка таблицы погрешностей
-ar_x, ar_y = 1, 1
-#summ = 0
-#count = 1
-ar_n = 3
-ar_m = 2
-arn_ofsett = 1
-arm_ofsett = 1
-artab_width = 400  # Ширина ячейки погрешности
-artab_height = 100  # Высота ячейки погрешности
-ar_x0 = 370
-ar_y0 = 100
-
-
-
-txt = [["№", " Цена\n деления", " Число\n горошин", " Длина\n ряда", " Диаметр\n горошин"],
-       ['1', [ar_txt[1][2]], None, None, None],
-       ['2', [ar_txt[1][2]], None, None, None],
-       ['3', [ar_txt[1][2]], None, None, None],
-       ['4', [ar_txt[1][2]], None, None, None],
-       ['5', [ar_txt[1][2]], None, None, None]]
 
 txt2 = [[None, "Объект", 'Макс. измеренная\n величина, мм', ' Мин. измеренная\n величина, мм', ' Макс. реальная\n величина, км', ' Мин. реальная\n величина, км'],
        ['1', "Море Дождей", None, None, None, None],
@@ -90,19 +88,7 @@ txt2 = [[None, "Объект", 'Макс. измеренная\n величин�
        ['3', "Горы Аппенины", None, None, None, None],
        ['4', "Море Кризисов", None, None, None, None],
        ['5', "Кратер Платон", None, None, None, None]]
-
-def table():
-    global x, y, x0, y0
-    h.delete("all")
-    h.create_text(1920 / 2, ofsett / 2, text="Таблица. Часть 2", font="Arial 36", fill=txtcol)
-    h.create_text(960, 960, text="Для выхода в меню нажмите Escape", font="Arial 24", fill=frcol)
-    h.create_text(960, 1020, text="Для переключения на таблицу 2 нажмите F", font="Arial 24", fill=frcol)
-    for i in range(m + 1):
-        h.create_line((x0, y0 + i * tab_height), (x0 + n * tab_width, y0 + i * tab_height), fill=frcol, width=3)
-    for j in range(n + 1):
-        h.create_line((x0 + j * tab_width, y0), (x0 + j * tab_width, y0 + m * tab_height), fill=frcol, width=3)
-    point[0] = h.create_line((x0 + x * tab_width + 10, y0 + y * tab_height), (x0 + x * tab_width + 10,
-                             y0 + y * tab_height + 30), fill="red", width=2)  # курсор таблицы'''
+'''
 
 # Подфункции
 def title():
@@ -118,8 +104,8 @@ def title():
 def main_menu():
     h1 = Canvas(h, bg=mcol)
     Label(h1, text="Меню", font="Arial 38", background=mcol, foreground=txtcol).pack(pady=10)
-    for (name, func) in [("Описание", description.draw), ("Погрешности", arrogance.draw), ("Таблица #1", None), ("Таблица #2", None), ("Числовые прямые", None), ("Помощь", helper)]:
-        Button(h1, text = name, command=func, height=6, width=20, background=mcol, foreground=txtcol).pack(pady=10)
+    for (name, func) in [("Описание", description.draw), ("Погрешности", arrogance.draw), ("Таблица №1", table.draw), ("Таблица №2", None), ("Числовые прямые", None), ("Помощь", helper)]:
+        Button(h1, text=name, command=func, height=6, width=20, background=mcol, foreground=txtcol).pack(pady=10)
     Label(h1, anchor="c", text="Для перехода в раздел нажмите на\nпрямоугольник левой кнопкой мыши",
                   font="ARIAL 24", background=mcol, foreground=frcol).pack(pady=10, side=BOTTOM)
     display(h1)
@@ -162,17 +148,21 @@ class Errors:
     def __init__(self):
         self.table = [["Цена\n деления, мм", "Инструментальная\n погрешность, мм"], [1, 1.5]]
         self.check_float = (scr.register(self.is_float), "%P")
+        self.prepare()
+
 
     def is_float(self, value):
         try:
-            return float(value) < 1.9 and len(value) < 5
+            v = float(value)
+            if v >= 1.9 or len(value) > 5:
+                return False
+            table.set_error(v)
+            return True
         except:
             return False
 
-    def draw(self):
-        h1 = Canvas(h, bg=mcol)
-        global pos
-        pos = State.Errors
+    def prepare(self):
+        self.widget = h1 = Canvas(h, bg=mcol)
         Label(h1, text="Погрешности", font="Arial 36", foreground=txtcol, background=mcol).pack(pady=10)
         Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(pady=10, side=BOTTOM)
         h2 = Canvas(h1, bg=mcol)
@@ -180,11 +170,50 @@ class Errors:
             Label(h2, text=cell, foreground=txtcol, background=mcol, font="Arial 24").grid(row=0, column=y, pady=10)
         for y, row in enumerate(self.table[1:]):
             for x, cell in enumerate(row):
+                print(x, y, cell)
                 e = Entry(h2, foreground=txtcol, background=mcol, font="Arial 24", validate="key", validatecommand=self.check_float)
                 e.insert(0, str(cell))
                 e.grid(row=y + 1 , column=x)
         h2.pack()
-        display(h1)
+    def draw(self):
+        global pos
+        pos = State.Errors
+        display(self.widget)
+
+class Table:
+    def __init__(self):
+        self.table = []
+        self.header = ["Цена\nделения, мм", "Число\nгорошин, шт", "Длина\nряда, мм", "Диаметр\nгорошин, мм"]
+        self.prepare()
+
+    def set_error(self, error):
+        for row in self.table:
+            row.set_error(error)
+
+
+    def prepare(self):
+        self.widget = h1 = Canvas(h, bg=mcol)
+        Label(h1, text="Таблица №1", font="Arial 36", foreground=txtcol, background=mcol).pack(pady=10)
+        Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(pady=10, side=BOTTOM)
+        Label(h1, text="Для переключения между ячейками таблицы нажмите клавишу Tab или Shift + Tab", font="Arial 24", foreground=frcol, background=mcol).pack(
+            pady=10, side=BOTTOM)
+        h2 = Canvas(h1, bg=mcol)
+        for x, cell in enumerate(self.header):
+            Label(h2, text=cell, font="Arial 24", foreground=frcol, background=mcol).grid(row=0, column=x, pady=10, padx=10)
+        for y in range(5):
+            row = Row0(h2)
+            for x, wid in enumerate(row.w_list()):
+                wid.grid(row=y+1, column=x, pady=10, padx=10)
+            self.table.append(row)
+        self.set_error(1)
+        h2.pack()
+
+    def draw(self):
+        global pos
+        pos = State.Errors
+
+        display(self.widget)
+table = Table()
 arrogance = Errors()
 
 def helper():
@@ -199,10 +228,10 @@ def helper():
                   font="Arial 24", foreground=txtcol, background=mcol).pack(pady=10)
     Label(h1, anchor="w", text="- Для того, чтобы попасть в меню из любого отдела,\n нажмите клавишу Escape", font="Arial 24",
           foreground=txtcol, background=mcol).pack(pady=10)
-    Label(h1, anchor="w", text="- Для того, чтобы попасть во вторую таблицу, нажмите клавишу F,\n а в первую -- клавишу В", font="Arial 24",
+    Label(h1, anchor="w", text="- Для переключения между ячейками таблицы нажмите клавишу Tab или Shift + Tab", font="Arial 24",
           foreground=txtcol, background=mcol).pack(pady=10)
-    Label(h1, anchor="w", text="- Для того, чтобы автоматически заполнить таблицы,\n нажмите клавишу F3", font="Arial 24",
-          foreground=txtcol, background=mcol).pack()
+    #Label(h1, anchor="w", text="- Для того, чтобы автоматически заполнить таблицы,\n нажмите клавишу F3", font="Arial 24",
+    #      foreground=txtcol, background=mcol).pack()
     Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(side=BOTTOM)
     display(h1)
 
@@ -230,14 +259,13 @@ def menu_event(e):
     pass
     #if e.type == EventType.ButtonPress and e.num == 1 and :
 def main(e):
-    print(f'Event: {e.keysym}')
     if e.type == EventType.ButtonPress:
         print(f'Button: {e.num}')
     global pos
     if pos == State.Menu:
         return menu_event(e)
-    if e.keysym == "space":
-        if pos == State.Title:
+    if pos == State.Title:
+        if e.keysym == "space":
             pos = State.Menu
         position(pos)
     '''if pos == 3 or pos == 4 or pos == 5:

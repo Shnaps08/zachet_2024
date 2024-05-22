@@ -22,21 +22,19 @@ class State(Enum):
     Help = 7
 
 pos = State.Title
-class Row0:
+class RowBase:
     def __init__(self, widget):
         self.check_num = (scr.register(self.is_num), "%P", "%V")
         self.error = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
         self.size = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
         self.length = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
-        self.result = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
-        self.maxval = 300
 
     def is_num(self, value, op):
         try:
             if value != value.strip():
                 return False
             v = float(value)
-            if v >= self.maxval or len(value) >= 5:
+            if v >= self.maxval or len(value) >= 7:
                 return False
             if op == 'focusout':
                 self.calc()
@@ -44,21 +42,57 @@ class Row0:
         except:
             return False
 
+    def set_error(self, error):
+        print(f"Error:{error}, {self.__class__.__name__}")
+        self.error.config(text=f"{error}")
+
+class Row0(RowBase):
+    def __init__(self, widget):
+        super().__init__(widget)
+        self.result = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
+        self.maxval = 300
+
     def w_list(self):
         return [self.error, self.size, self.length, self.result]
-
     def calc(self):
         try:
             print(f"{self.length.get()}")
             d = float(self.length.get()) / float(self.size.get())
-            ar = float(self.error.cget('text')) * float(self.size.get())
-            self.result.config(text=f"{d:.2f} +- {ar}")
+            ar = float(self.error.cget('text')) / float(self.size.get())
+            self.result.config(text=f"{d:.2f} +- {ar:.2f}")
         except:
             self.result.config(text='')
 
     def set_error(self, error):
         self.error.config(text=f"{error}")
         self.calc()
+
+class Row1(RowBase):
+    def __init__(self, widget, name):
+        super().__init__(widget)
+        self.maxmoon = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
+        self.minmoon = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
+        self.maxval = 1000
+        self.maxi = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
+        self.mini = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
+        self.obj = Label(widget, text=name, font="Arial 24", foreground=frcol, background=mcol)
+
+    def w_list(self):
+        return [self.obj, self.maxi, self.mini, self.maxmoon, self.minmoon]
+
+    def calc(self):
+        try:
+            ma = float(self.maxi.get())
+            mi = float(self.mini.get())
+            ar = float(self.error.cget('text')) * 19
+            print(mi, ma, ar)
+            self.maxmoon.config(text=f"{ma * 19:.2f} +- {ar:.2f}")
+            self.minmoon.config(text=f"{mi * 19:.2f} +- {ar:.2f}")
+        except:
+            import traceback
+            traceback.print_exc()
+            self.maxmoon.config(text='')
+            self.minmoon.config(text='')
 
 scr = Tk()
 scr.geometry("192x1080")
@@ -75,21 +109,6 @@ def display(new):
     if new is not None:
         new.pack(fill=BOTH, expand=True)
 
-'''
-
-#настройка таблицы значений 2
-n2 = 6
-m2 = 6
-
-
-txt2 = [[None, "Объект", 'Макс. измеренная\n величина, мм', ' Мин. измеренная\n величина, мм', ' Макс. реальная\n величина, км', ' Мин. реальная\n величина, км'],
-       ['1', "Море Дождей", None, None, None, None],
-       ['2', "Море Ясности", None, None, None, None],
-       ['3', "Горы Аппенины", None, None, None, None],
-       ['4', "Море Кризисов", None, None, None, None],
-       ['5', "Кратер Платон", None, None, None, None]]
-'''
-
 # Подфункции
 def title():
     h1 = Canvas(h, width=1900, height=1000, bg=mcol)
@@ -104,7 +123,7 @@ def title():
 def main_menu():
     h1 = Canvas(h, bg=mcol)
     Label(h1, text="Меню", font="Arial 38", background=mcol, foreground=txtcol).pack(pady=10)
-    for (name, func) in [("Описание", description.draw), ("Погрешности", arrogance.draw), ("Таблица №1", table.draw), ("Таблица №2", None), ("Числовые прямые", None), ("Помощь", helper)]:
+    for (name, func) in [("Описание", description.draw), ("Погрешности", arrogance.draw), ("Таблица №1", table.draw), ("Таблица №2", table1.draw), ("Числовые прямые", None), ("Помощь", helper)]:
         Button(h1, text=name, command=func, height=6, width=20, background=mcol, foreground=txtcol).pack(pady=10)
     Label(h1, anchor="c", text="Для перехода в раздел нажмите на\nпрямоугольник левой кнопкой мыши",
                   font="ARIAL 24", background=mcol, foreground=frcol).pack(pady=10, side=BOTTOM)
@@ -143,22 +162,27 @@ class Description:
         display(h1)
 description = Description()
 
-
 class Errors:
     def __init__(self):
         self.table = [["Цена\n деления, мм", "Инструментальная\n погрешность, мм"], [1, 1.5]]
-        self.check_float = (scr.register(self.is_float), "%P")
+        self.check_float = scr.register(self.is_float)
         self.prepare()
 
 
-    def is_float(self, value):
+    def is_float(self, value, op):
         try:
-            v = float(value)
-            if v >= 1.9 or len(value) > 5:
+            if value != value.strip():
                 return False
-            table.set_error(v)
+            v = float(value)
+            if v >= 3 or len(value) >= 5:
+                return False
+            if op == 'focusout' or True:
+                table.set_error(v)
+                table1.set_error(v)
             return True
         except:
+            import traceback
+            traceback.print_exc()
             return False
 
     def prepare(self):
@@ -171,7 +195,7 @@ class Errors:
         for y, row in enumerate(self.table[1:]):
             for x, cell in enumerate(row):
                 print(x, y, cell)
-                e = Entry(h2, foreground=txtcol, background=mcol, font="Arial 24", validate="key", validatecommand=self.check_float)
+                e = Entry(h2, foreground=txtcol, background=mcol, font="Arial 24", validate="all", validatecommand=(self.check_float, "%P", "%V"))
                 e.insert(0, str(cell))
                 e.grid(row=y + 1 , column=x)
         h2.pack()
@@ -213,7 +237,43 @@ class Table:
         pos = State.Errors
 
         display(self.widget)
+
+class Table1:
+    def __init__(self):
+        self.table = []
+        self.header = ["Объект", 'Макс. измеренная\nвеличина, мм', 'Мин. измеренная\nвеличина, мм', 'Макс. реальная\nвеличина, км', 'Мин. реальная\nвеличина, км']
+        self.obj = ["Море Дождей", "Море Ясности", "Горы Аппенины", "Море Кризисов", "Кратер Платон"]
+        self.prepare()
+
+    def prepare(self):
+        self.widget = h1 = Canvas(h, bg=mcol)
+        Label(h1, text="Таблица №2", font="Arial 36", foreground=txtcol, background=mcol).pack(pady=10)
+        Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(
+            pady=10, side=BOTTOM)
+        Label(h1, text="Для переключения между ячейками таблицы нажмите клавишу Tab или Shift + Tab", font="Arial 24",
+              foreground=frcol, background=mcol).pack(
+            pady=10, side=BOTTOM)
+        h2 = Canvas(h1, bg=mcol)
+        for x, cell in enumerate(self.header):
+            Label(h2, text=cell, font="Arial 24", foreground=frcol, background=mcol).grid(row=0, column=x, pady=10, padx=10)
+        for y, name in enumerate(self.obj):
+            row = Row1(h2, name)
+            for x, wid in enumerate(row.w_list()):
+                wid.grid(row=y + 1, column=x, pady=10, padx=10)
+            self.table.append(row)
+        h2.pack()
+
+    def set_error(self, error):
+        for row in self.table:
+            row.set_error(error)
+
+    def draw(self):
+        global pos
+        pos = State.Errors
+        display(self.widget)
+
 table = Table()
+table1 = Table1()
 arrogance = Errors()
 
 def helper():

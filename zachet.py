@@ -11,6 +11,7 @@ from tkinter import *
 from math import *
 from enum import Enum
 
+
 class State(Enum):
     Title = 0
     Menu = 1
@@ -21,13 +22,25 @@ class State(Enum):
     Lines = 6
     Help = 7
 
+
 pos = State.Title
+
+
 class RowBase:
-    def __init__(self, widget):
+    def __init__(self, widget, *values):
         self.check_num = (scr.register(self.is_num), "%P", "%V")
         self.error = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
         self.size = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
         self.length = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
+        self.values = values
+        print(self.__class__.__name__, self.values)
+
+    def reset(self):
+        self.size.delete(0, END)
+        self.size.insert(0, f"{self.values[0]}")
+        self.length.delete(0, END)
+        self.length.insert(0, f"{self.values[1]}")
+        self.calc()
 
     def is_num(self, value, op):
         try:
@@ -46,11 +59,13 @@ class RowBase:
         print(f"Error:{error}, {self.__class__.__name__}")
         self.error.config(text=f"{error}")
 
+
 class Row0(RowBase):
-    def __init__(self, widget):
-        super().__init__(widget)
+    def __init__(self, widget, *args):
+        super().__init__(widget, *args)
         self.result = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
         self.maxval = 300
+
 
     def w_list(self):
         return [self.error, self.size, self.length, self.result]
@@ -67,23 +82,23 @@ class Row0(RowBase):
         self.error.config(text=f"{error}")
         self.calc()
 
+
 class Row1(RowBase):
-    def __init__(self, widget, name):
-        super().__init__(widget)
+    def __init__(self, widget, name, *args):
+        super().__init__(widget, *args)
         self.maxmoon = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
         self.minmoon = Label(widget, text='', font="Arial 24", foreground=frcol, background=mcol)
         self.maxval = 1000
-        self.maxi = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
-        self.mini = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
         self.obj = Label(widget, text=name, font="Arial 24", foreground=frcol, background=mcol)
 
     def w_list(self):
-        return [self.obj, self.maxi, self.mini, self.maxmoon, self.minmoon]
+        return [self.obj, self.size, self.length, self.maxmoon, self.minmoon]
+
 
     def calc(self):
         try:
-            ma = float(self.maxi.get())
-            mi = float(self.mini.get())
+            ma = float(self.size.get())
+            mi = float(self.length.get())
             ar = float(self.error.cget('text')) * 19
             print(mi, ma, ar)
             self.maxmoon.config(text=f"{ma * 19:.2f} +- {ar:.2f}")
@@ -94,11 +109,13 @@ class Row1(RowBase):
             self.maxmoon.config(text='')
             self.minmoon.config(text='')
 
+
 scr = Tk()
 scr.geometry("192x1080")
 h = Canvas(scr, width=1920, height=1080, bg=mcol)
 h.pack(fill=BOTH, expand=True)
 widget = None
+
 
 def display(new):
     h.delete('all')
@@ -110,6 +127,8 @@ def display(new):
         new.pack(fill=BOTH, expand=True)
 
 # Подфункции
+
+
 def title():
     h1 = Canvas(h, width=1900, height=1000, bg=mcol)
     Label(h1, anchor="c", text="Зачетная работа", font="ARIAL 42", foreground=frcol, background=mcol).pack()
@@ -120,6 +139,7 @@ def title():
     Label(h1, anchor="c", text="2023 - 2024 учебный год", font="ARIAL 24", foreground=txtcol, background=mcol).pack(side=BOTTOM)
     display(h1)
 
+
 def main_menu():
     h1 = Canvas(h, bg=mcol)
     Label(h1, text="Меню", font="Arial 38", background=mcol, foreground=txtcol).pack(pady=10)
@@ -128,6 +148,7 @@ def main_menu():
     Label(h1, anchor="c", text="Для перехода в раздел нажмите на\nпрямоугольник левой кнопкой мыши",
                   font="ARIAL 24", background=mcol, foreground=frcol).pack(pady=10, side=BOTTOM)
     display(h1)
+
 
 class Description:
     def __init__(self):
@@ -160,7 +181,10 @@ class Description:
         Label(h1, text="Для переключения на страницу вперед нажмите клавишу PgDn", font="Arial 22", foreground=frcol,
               background=mcol).pack(pady=10, side=BOTTOM)
         display(h1)
+
+
 description = Description()
+
 
 class Errors:
     def __init__(self):
@@ -204,10 +228,16 @@ class Errors:
         pos = State.Errors
         display(self.widget)
 
+
 class Table:
     def __init__(self):
         self.table = []
         self.header = ["Цена\nделения, мм", "Число\nгорошин, шт", "Длина\nряда, мм", "Диаметр\nгорошин, мм"]
+        self.defaults = [[10, 25],
+                         [15, 32],
+                         [20, 43],
+                         [25, 55],
+                         [30, 69]]
         self.prepare()
 
     def set_error(self, error):
@@ -221,11 +251,13 @@ class Table:
         Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(pady=10, side=BOTTOM)
         Label(h1, text="Для переключения между ячейками таблицы нажмите клавишу Tab или Shift + Tab", font="Arial 24", foreground=frcol, background=mcol).pack(
             pady=10, side=BOTTOM)
+        Label(h1, text="Для автоматического заполнения таблицы нажмите клавишу F3", font="Arial 24",
+              foreground=frcol, background=mcol).pack(pady=10, side=BOTTOM)
         h2 = Canvas(h1, bg=mcol)
         for x, cell in enumerate(self.header):
             Label(h2, text=cell, font="Arial 24", foreground=frcol, background=mcol).grid(row=0, column=x, pady=10, padx=10)
-        for y in range(5):
-            row = Row0(h2)
+        for y, vals in enumerate(self.defaults):
+            row = Row0(h2, *vals)
             for x, wid in enumerate(row.w_list()):
                 wid.grid(row=y+1, column=x, pady=10, padx=10)
             self.table.append(row)
@@ -234,16 +266,28 @@ class Table:
 
     def draw(self):
         global pos
-        pos = State.Errors
-
+        pos = State.Table0
         display(self.widget)
+        
+    def reset(self):
+        for row in self.table:
+            row.reset()
 
+              
 class Table1:
     def __init__(self):
         self.table = []
         self.header = ["Объект", 'Макс. измеренная\nвеличина, мм', 'Мин. измеренная\nвеличина, мм', 'Макс. реальная\nвеличина, км', 'Мин. реальная\nвеличина, км']
-        self.obj = ["Море Дождей", "Море Ясности", "Горы Аппенины", "Море Кризисов", "Кратер Платон"]
+        self.obj = [["Море Дождей", 56, 35],
+                    ["Море Ясности", 34, 25],
+                    ["Горы Аппенины", 26, 8.5],
+                    ["Море Кризисов", 24, 15.5],
+                    ["Кратер Платон", 6.5, 3.5]]
         self.prepare()
+
+    def reset(self):
+        for row in self.table:
+            row.reset()
 
     def prepare(self):
         self.widget = h1 = Canvas(h, bg=mcol)
@@ -251,13 +295,14 @@ class Table1:
         Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(
             pady=10, side=BOTTOM)
         Label(h1, text="Для переключения между ячейками таблицы нажмите клавишу Tab или Shift + Tab", font="Arial 24",
-              foreground=frcol, background=mcol).pack(
-            pady=10, side=BOTTOM)
+              foreground=frcol, background=mcol).pack(pady=10, side=BOTTOM)
+        Label(h1, text="Для автоматического заполнения таблицы нажмите клавишу F3", font="Arial 24",
+              foreground=frcol, background=mcol).pack(pady=10, side=BOTTOM)
         h2 = Canvas(h1, bg=mcol)
         for x, cell in enumerate(self.header):
             Label(h2, text=cell, font="Arial 24", foreground=frcol, background=mcol).grid(row=0, column=x, pady=10, padx=10)
         for y, name in enumerate(self.obj):
-            row = Row1(h2, name)
+            row = Row1(h2, *name)
             for x, wid in enumerate(row.w_list()):
                 wid.grid(row=y + 1, column=x, pady=10, padx=10)
             self.table.append(row)
@@ -269,12 +314,14 @@ class Table1:
 
     def draw(self):
         global pos
-        pos = State.Errors
+        pos = State.Table1
         display(self.widget)
+
 
 table = Table()
 table1 = Table1()
 arrogance = Errors()
+
 
 def helper():
     h1 = Canvas(h, bg=mcol)
@@ -290,10 +337,11 @@ def helper():
           foreground=txtcol, background=mcol).pack(pady=10)
     Label(h1, anchor="w", text="- Для переключения между ячейками таблицы нажмите клавишу Tab или Shift + Tab", font="Arial 24",
           foreground=txtcol, background=mcol).pack(pady=10)
-    #Label(h1, anchor="w", text="- Для того, чтобы автоматически заполнить таблицы,\n нажмите клавишу F3", font="Arial 24",
-    #      foreground=txtcol, background=mcol).pack()
+    Label(h1, anchor="w", text="- Для автоматического заполнения таблицы нажмите клавишу F3", font="Arial 24",
+          foreground=txtcol, background=mcol).pack()
     Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(side=BOTTOM)
     display(h1)
+
 
 def position(pos):
     if pos == State.Title:
@@ -306,45 +354,45 @@ def position(pos):
         helper()
     elif pos == State.Errors:
         arrogance.draw()
-    '''
     elif pos == State.Table0:
-        table()
+        table.draw()
     elif pos == State.Table1:
-    print('table2')
-        table2()
-    elif pos == State.Lines:
+        table1.draw()
+    '''elif pos == State.Lines:
         graphics()'''
 
-def menu_event(e):
-    pass
-    #if e.type == EventType.ButtonPress and e.num == 1 and :
+
 def main(e):
-    if e.type == EventType.ButtonPress:
-        print(f'Button: {e.num}')
     global pos
-    if pos == State.Menu:
-        return menu_event(e)
     if pos == State.Title:
         if e.keysym == "space":
             pos = State.Menu
         position(pos)
-    '''if pos == 3 or pos == 4 or pos == 5:
-        move_input(e)'''
-    if pos != 3 and pos != 4 and pos != 5:
-        costyl1 = 0
+
 
 def on_escape(e):
     global pos
-    print(f"Escape: {pos}")
     if pos != State.Menu and pos != State.Title:
         pos = State.Menu
         main_menu()
+
+
+def on_f3(e):
+    global pos
+    print('auto', pos)
+    if pos == State.Table0:
+        print('table0 auto')
+        table.reset()
+    elif pos == State.Table1:
+        table1.reset()
+
 
 scr.bind("<Prior>", lambda e: description.shift(-1))
 scr.bind("<Next>", lambda e: description.shift(1))
 
 scr.bind("<KeyRelease>", main)
 scr.bind("<Escape>", on_escape)
+scr.bind("<F3>", on_f3)
 
 scr.bind("<Button-1>", main)
 title()

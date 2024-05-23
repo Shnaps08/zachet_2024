@@ -33,7 +33,6 @@ class RowBase:
         self.size = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
         self.length = Entry(widget, foreground=txtcol, background=mcol, validate="all", validatecommand=self.check_num)
         self.values = values
-        print(self.__class__.__name__, self.values)
 
     def reset(self):
         self.size.delete(0, END)
@@ -143,7 +142,7 @@ def title():
 def main_menu():
     h1 = Canvas(h, bg=mcol)
     Label(h1, text="Меню", font="Arial 38", background=mcol, foreground=txtcol).pack(pady=10)
-    for (name, func) in [("Описание", description.draw), ("Погрешности", arrogance.draw), ("Таблица №1", table.draw), ("Таблица №2", table1.draw), ("Числовые прямые", None), ("Помощь", helper)]:
+    for (name, func) in [("Описание", description.draw), ("Погрешности", arrogance.draw), ("Таблица №1", table.draw), ("Таблица №2", table1.draw), ("Числовая прямая", graphics), ("Помощь", helper)]:
         Button(h1, text=name, command=func, height=6, width=20, background=mcol, foreground=txtcol).pack(pady=10)
     Label(h1, anchor="c", text="Для перехода в раздел нажмите на\nпрямоугольник левой кнопкой мыши",
                   font="ARIAL 24", background=mcol, foreground=frcol).pack(pady=10, side=BOTTOM)
@@ -167,6 +166,8 @@ class Description:
         elif self.idx >= len(self.images):
             self.idx = len(self.images) - 1
         self.draw()
+
+
     def draw(self):
         print("draw")
         h1 = Canvas(h, bg=mcol)
@@ -175,7 +176,7 @@ class Description:
         Label(h1, text="Описание", font="Arial 36", foreground=txtcol, background=mcol).pack()
         Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(
             side=BOTTOM)
-        h1.create_image(960, 540, image=self.images[self.idx], anchor="c")
+        h1.create_image(960, 440, image=self.images[self.idx], anchor="c")
         Label(h1, text="Для переключения на страницу назад нажмите клавишу PgUp", font="Arial 22", foreground=frcol,
               background=mcol).pack(pady=5, side=BOTTOM)
         Label(h1, text="Для переключения на страницу вперед нажмите клавишу PgDn", font="Arial 22", foreground=frcol,
@@ -218,7 +219,6 @@ class Errors:
             Label(h2, text=cell, foreground=txtcol, background=mcol, font="Arial 24").grid(row=0, column=y, pady=10)
         for y, row in enumerate(self.table[1:]):
             for x, cell in enumerate(row):
-                print(x, y, cell)
                 e = Entry(h2, foreground=txtcol, background=mcol, font="Arial 24", validate="all", validatecommand=(self.check_float, "%P", "%V"))
                 e.insert(0, str(cell))
                 e.grid(row=y + 1 , column=x)
@@ -322,6 +322,17 @@ table = Table()
 table1 = Table1()
 arrogance = Errors()
 
+line_image = PhotoImage(file='line.png')
+
+def graphics():
+    h1 = Canvas(h, bg=mcol)
+    global pos
+    pos = State.Lines
+    Label(h1, text="Числовая прямая", font="Arial 36", foreground=txtcol, background=mcol).pack(pady=10)
+    Label(h1, text="Для выхода в меню нажмите Escape", font="Arial 24", foreground=frcol, background=mcol).pack(side=BOTTOM, pady=10)
+    h1.create_image(1920/2, 1080/2, image=line_image, anchor='c')
+    display(h1)
+
 
 def helper():
     h1 = Canvas(h, bg=mcol)
@@ -358,8 +369,8 @@ def position(pos):
         table.draw()
     elif pos == State.Table1:
         table1.draw()
-    '''elif pos == State.Lines:
-        graphics()'''
+    elif pos == State.Lines:
+        graphics()
 
 
 def main(e):
